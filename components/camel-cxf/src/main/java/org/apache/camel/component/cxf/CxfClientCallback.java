@@ -17,8 +17,10 @@
 package org.apache.camel.component.cxf;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
@@ -38,6 +40,7 @@ public class CxfClientCallback extends ClientCallback {
     private final org.apache.cxf.message.Exchange cxfExchange;
     private final BindingOperationInfo boi;
     private final CxfEndpoint endpoint;
+    private final AtomicBoolean handled = new AtomicBoolean(false);
     
     
     public CxfClientCallback(AsyncCallback callback, 
@@ -53,8 +56,16 @@ public class CxfClientCallback extends ClientCallback {
     }
     
     public void handleResponse(Map<String, Object> ctx, Object[] res) {
+        if (!handled.compareAndSet(false, true)) {
+            LOG.warn("This callback was already handled: ctx={}, res={}", ctx, Arrays.toString(res));
+            // To debug where this callback is invoked more than once, turn on the following debug log
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("A dummy exception only to record stacktrace", new Exception());
+            }
+            return;
+        }
         try {
-            super.handleResponse(ctx, res);            
+            super.handleResponse(ctx, res);
         } finally {
             // add cookies to the cookie store
             if (endpoint.getCookieHandler() != null) {
@@ -80,6 +91,14 @@ public class CxfClientCallback extends ClientCallback {
     }
     
     public void handleException(Map<String, Object> ctx, Throwable ex) {
+        if (!handled.compareAndSet(false, true)) {
+            LOG.warn("This callback was already handled: ctx={}, ex={}", ctx, ex);
+            // To debug where this callback is invoked more than once, turn on the following debug log
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Exception detail:", new Exception(ex));
+            }
+            return;
+        }
         try {
             super.handleException(ctx, ex);
             // need to call the conduitSelector complete method to enable the fail over feature
@@ -118,6 +137,6 @@ public class CxfClientCallback extends ClientCallback {
                 LOG.debug("{} calling handleException", Thread.currentThread().getName());
             }
         }
-    }        
+    }
 
 }
