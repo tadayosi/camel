@@ -26,7 +26,7 @@
   </parent>
 
   <artifactId>camel-blueprint-cxf-test</artifactId>
-  <name>Camel :: Integration Tests :: Blueprint CXF Tests </name>
+  <name>Camel :: Integration Tests :: Blueprint CXF Tests</name>
   <description>Tests the camel-cxf blueprint features</description>
 
   <dependencies>
@@ -42,26 +42,26 @@
       <groupId>org.apache.karaf.jaas</groupId>
       <artifactId>org.apache.karaf.jaas.jasypt</artifactId>
       <exclusions>
-          <exclusion>
-              <groupId>org.apache.servicemix.bundles</groupId>
-              <artifactId>org.apache.servicemix.bundles.jasypt</artifactId>
-          </exclusion>
+        <exclusion>
+          <groupId>org.apache.servicemix.bundles</groupId>
+          <artifactId>org.apache.servicemix.bundles.jasypt</artifactId>
+        </exclusion>
       </exclusions>
       <version>${karaf-version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-        <groupId>org.jasypt</groupId>
-        <artifactId>jasypt</artifactId>
-        <version>${jasypt-version}</version>
-        <scope>test</scope>
+      <groupId>org.jasypt</groupId>
+      <artifactId>jasypt</artifactId>
+      <version>${jasypt-version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-core</artifactId>
       <scope>test</scope>
     </dependency>
-     <dependency>
+    <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-test</artifactId>
       <scope>test</scope>
@@ -84,25 +84,25 @@
       <exclusions>
         <exclusion>
           <groupId>org.apache.aries.blueprint</groupId>
-          <artifactId>org.apache.aries.blueprint.core</artifactId>         
+          <artifactId>org.apache.aries.blueprint.core</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.apache.aries.blueprint</groupId>
-          <artifactId>org.apache.aries.blueprint.api</artifactId>         
+          <artifactId>org.apache.aries.blueprint.api</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.apache.aries.quiesce</groupId>
-          <artifactId>org.apache.aries.quiesce.api</artifactId>         
+          <artifactId>org.apache.aries.quiesce.api</artifactId>
         </exclusion>
         <!--  exclude additional unneeded components -->
         <exclusion>
           <groupId>org.apache.camel</groupId>
-          <artifactId>camel-spring</artifactId>         
+          <artifactId>camel-spring</artifactId>
         </exclusion>
       </exclusions>
       <scope>test</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.cxf</groupId>
       <artifactId>cxf-rt-transports-http</artifactId>
@@ -158,7 +158,7 @@
       <artifactId>cxf-rt-rs-extension-providers</artifactId>
       <version>${cxf-version}</version>
       <scope>test</scope>
-    </dependency>  
+    </dependency>
     <dependency>
       <groupId>org.codehaus.jettison</groupId>
       <artifactId>jettison</artifactId>
@@ -176,7 +176,7 @@
       <artifactId>org.osgi.compendium</artifactId>
       <scope>test</scope>
     </dependency>
-    
+
     <!-- logging -->
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
