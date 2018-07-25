@@ -19,8 +19,12 @@ package org.apache.camel.example.ehcache;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.ehcache.EhcacheConstants;
 import org.apache.camel.model.rest.RestBindingMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CachingRoute extends RouteBuilder {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CachingRoute.class);
 
     private static final String EHCACHE_ENDPOINT = "ehcache://dataServiceCache"
         + "?configurationUri=/ehcache.xml"
@@ -52,6 +56,10 @@ public class CachingRoute extends RouteBuilder {
                     .setHeader(EhcacheConstants.ACTION, constant(EhcacheConstants.ACTION_PUT))
                     .setHeader(EhcacheConstants.KEY, header("id").convertTo(Long.class))
                     .to(EHCACHE_ENDPOINT)
+                    .process((e) -> {
+                        CacheData data = (CacheData) e.getIn().getBody();
+                        LOG.info("Cached data: id={}, value={}, created={}", data.getId(), data.getValue(), data.getCreated());
+                    })
                 .otherwise()
                     .log("Cache hit. Returning")
             .endChoice();

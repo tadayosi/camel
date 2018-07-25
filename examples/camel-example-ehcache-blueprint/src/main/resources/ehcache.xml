@@ -28,7 +28,7 @@
     <ehcache:key-type>java.lang.Long</ehcache:key-type>
     <ehcache:value-type>java.io.Serializable</ehcache:value-type>
     <ehcache:resources>
-      <ehcache:heap unit="entries">100</ehcache:heap>
+      <ehcache:heap unit="entries">1</ehcache:heap>
       <ehcache:disk persistent="false" unit="MB">10</ehcache:disk>
     </ehcache:resources>
   </ehcache:cache>
