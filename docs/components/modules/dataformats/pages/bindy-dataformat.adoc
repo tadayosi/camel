@@ -108,6 +108,44 @@ to several children model classes.
 |CsvRecord |csv |Class
 |===
 
+// annotation interface: org.apache.camel.dataformat.bindy.annotation.CsvRecord
+// annotation options: START
+[width="100%",cols="10%,10%,10%,10%,60%",options="header",]
+|===
+| Parameter name | Type | Optional | Default value | Info
+
+
+| separator | String |  |  | -- so you are not obliged to mention it
+
+| allowEmptyStream | boolean | Yes | false | -- so you are not obliged to mention it
+
+| autospanLine | boolean | Yes | false | -- so you are not obliged to mention it
+
+| crlf | String | Yes | WINDOWS | -- so you are not obliged to mention it
+
+| endWithLineBreak | boolean | Yes | true | -- so you are not obliged to mention it
+
+| generateHeaderColumns | boolean | Yes | false | -- so you are not obliged to mention it
+
+| isOrdered | boolean | Yes | false | -- so you are not obliged to mention it
+
+| name | String | Yes |  | -- so you are not obliged to mention it
+
+| quote | String | Yes | " | -- so you are not obliged to mention it
+
+| quoting | boolean | Yes | false | -- so you are not obliged to mention it
+
+| quotingEscaped | boolean | Yes | false | -- so you are not obliged to mention it
+
+| removeQuotes | boolean | Yes | true | -- so you are not obliged to mention it
+
+| skipField | boolean | Yes | false | -- so you are not obliged to mention it
+
+| skipFirstLine | boolean | Yes | false | -- so you are not obliged to mention it
+
+|===
+// annotation options: END
+
 [width="100%",cols="10%,10%,80%",options="header",]
 |===
 |Parameter name |type |Info
@@ -358,6 +396,18 @@ The link annotation will allow to link objects together.
 
 |*Link* |all |Class & Property
 |===
+
+// annotation interface: org.apache.camel.dataformat.bindy.annotation.Link
+// annotation options: START
+[width="100%",cols="10%,10%,10%,10%,60%",options="header",]
+|===
+| Parameter name | Type | Optional | Default value | Info
+
+
+| linkType | LinkType | Yes | OneToOne | -- so you are not obliged to mention it
+
+|===
+// annotation options: END
 
 [width="100%",cols="10%,10%,80%",options="header",]
 |===

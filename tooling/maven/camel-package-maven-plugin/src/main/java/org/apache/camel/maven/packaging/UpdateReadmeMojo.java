@@ -19,6 +19,7 @@ package org.apache.camel.maven.packaging;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.apache.camel.tooling.model.AnnotationModel;
 import org.apache.camel.tooling.model.ArtifactModel;
 import org.apache.camel.tooling.model.BaseModel;
 import org.apache.camel.tooling.model.BaseOptionModel;
@@ -236,7 +238,7 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
 
         // only if there is components we should update the documentation files
         if (!jsonFiles.isEmpty()) {
-            getLog().debug("Found " + jsonFiles.size() + "miscellaneous components");
+            getLog().debug("Found " + jsonFiles.size() + " miscellaneous components");
             for (File jsonFile : jsonFiles) {
                 final String kind = "other";
                 String json = loadJsonFrom(jsonFile, kind);
@@ -329,6 +331,9 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
 
                     String options = evaluateTemplate("dataformat-options.mvel", model);
                     updated |= updateOptionsIn(file, kind, options);
+
+                    // optional annotation processings
+                    updated |= updateAnnotationsIn(file);
 
                     if (updated) {
                         getLog().info("Updated doc file: " + file);
@@ -800,6 +805,58 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
         }
     }
 
+    private boolean updateAnnotationsIn(final File file) throws MojoExecutionException {
+        if (!file.exists()) {
+            return false;
+        }
+
+        try {
+            String text = PackageHelper.loadText(file);
+            String updated = updateAnnotationRecursivelyIn(text);
+            if (text.equals(updated)) {
+                return false;
+            }
+            PackageHelper.writeText(file, updated);
+            return true;
+        } catch (IOException e) {
+            throw new MojoExecutionException("Error reading file " + file + " Reason: " + e, e);
+        }
+    }
+
+    private String updateAnnotationRecursivelyIn(String text) throws MojoExecutionException {
+        String annotationInterface = Strings.between(text, "// annotation interface:", "// annotation options: START");
+        if (annotationInterface == null) {
+            return text;
+        }
+        annotationInterface = annotationInterface.trim();
+
+        Class<?> annotation = loadClass(annotationInterface);
+        if (!annotation.isAnnotation()) {
+            throw new MojoExecutionException("Interface " + annotationInterface + " is not an annotation");
+        }
+        getLog().debug("Processing annotation " + annotationInterface);
+        AnnotationModel model = generateAnnotationModel(annotation);
+        String options = evaluateTemplate("annotation-options.mvel", model);
+        String updated = options.trim();
+
+        String existing = Strings.between(text, "// annotation options: START", "// annotation options: END");
+        if (existing == null) {
+            return text;
+        }
+        // remove leading line breaks etc
+        existing = existing.trim();
+
+        String after = Strings.after(text, "// annotation options: END");
+        String afterUpdated = updateAnnotationRecursivelyIn(after);
+
+        if (existing.equals(updated) && after.equals(afterUpdated)) {
+            return text;
+        }
+
+        String before = Strings.before(text, "// annotation options: START");
+        return before + "// annotation options: START\n" + updated + "\n// annotation options: END" + afterUpdated;
+    }
+
     private static String loadJsonFrom(Set<File> jsonFiles, String kind, String name) {
         for (File file : jsonFiles) {
             if (file.getName().equals(name + PackageHelper.JSON_SUFIX)) {
@@ -914,6 +971,23 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
                    + wrapEnumValues(option.getEnums());
             option.setDescription(desc);
         });
+        return model;
+    }
+
+    private AnnotationModel generateAnnotationModel(Class<?> annotation) {
+        AnnotationModel model = new AnnotationModel();
+        for (Method method : annotation.getDeclaredMethods()) {
+            AnnotationModel.AnnotationOptionModel option = new AnnotationModel.AnnotationOptionModel();
+            option.setName(method.getName());
+            option.setType(method.getReturnType().getSimpleName());
+            if (method.getDefaultValue() != null) {
+                option.setOptional(true);
+                option.setDefaultValue(method.getDefaultValue().toString());
+            }
+            // TODO read from javadoc
+            option.setDescription("-- so you are not obliged to mention it");
+            model.addOption(option);
+        }
         return model;
     }
 
