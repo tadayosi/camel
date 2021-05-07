@@ -17,9 +17,11 @@
 package org.apache.camel.maven.packaging;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -33,6 +35,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.camel.tooling.model.AnnotationModel;
@@ -54,6 +57,12 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.jboss.forge.roaster.Roaster;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ASTNode;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Javadoc;
+import org.jboss.forge.roaster.model.source.AnnotationElementSource;
+import org.jboss.forge.roaster.model.source.JavaAnnotationSource;
 import org.mvel2.templates.TemplateRuntime;
 import org.sonatype.plexus.build.incremental.BuildContext;
 
@@ -111,6 +120,8 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
      */
     @Parameter
     protected Boolean failFast;
+
+    protected List<Path> sourceRoots;
 
     @Override
     public void execute(MavenProject project, MavenProjectHelper projectHelper, BuildContext buildContext)
@@ -333,7 +344,10 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
                     updated |= updateOptionsIn(file, kind, options);
 
                     // optional annotation processings
-                    updated |= updateAnnotationsIn(file);
+                    // for now it's only applied to bindy but can be unlocked for other dataformats if needed
+                    if ("bindy".equals(dataFormatName)) {
+                        updated |= updateAnnotationsIn(file);
+                    }
 
                     if (updated) {
                         getLog().info("Updated doc file: " + file);
@@ -849,7 +863,7 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
         String after = Strings.after(text, "// annotation options: END");
         String afterUpdated = updateAnnotationRecursivelyIn(after);
 
-        if (existing.equals(updated) && after.equals(afterUpdated)) {
+        if (existing.equals(updated) && Objects.equals(after, afterUpdated)) {
             return text;
         }
 
@@ -975,6 +989,9 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
     }
 
     private AnnotationModel generateAnnotationModel(Class<?> annotation) {
+        String source = loadJavaSource(annotation.getName());
+        JavaAnnotationSource annotationSource = parseAnnotationSource(source);
+
         AnnotationModel model = new AnnotationModel();
         for (Method method : annotation.getDeclaredMethods()) {
             AnnotationModel.AnnotationOptionModel option = new AnnotationModel.AnnotationOptionModel();
@@ -984,11 +1001,77 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
                 option.setOptional(true);
                 option.setDefaultValue(method.getDefaultValue().toString());
             }
-            // TODO read from javadoc
-            option.setDescription("-- so you are not obliged to mention it");
+
+            String javadoc = findJavaDoc(source, annotationSource, method);
+            if (!Strings.isNullOrEmpty(javadoc)) {
+                option.setDescription(javadoc);
+            }
+
             model.addOption(option);
         }
         return model;
+    }
+
+    private JavaAnnotationSource parseAnnotationSource(String source) {
+        return Roaster.parse(JavaAnnotationSource.class, source);
+    }
+
+    private String loadJavaSource(String className) {
+        try {
+            Path file = getSourceRoots().stream()
+                    .map(d -> d.resolve(className.replace('.', '/') + ".java"))
+                    .filter(Files::isRegularFile)
+                    .findFirst()
+                    .orElse(null);
+
+            if (file == null) {
+                throw new FileNotFoundException("Unable to find source for " + className);
+            }
+            return PackageHelper.loadText(file);
+        } catch (IOException e) {
+            String classpath;
+            try {
+                classpath = project.getCompileClasspathElements().toString();
+            } catch (Exception e2) {
+                classpath = e2.toString();
+            }
+            throw new RuntimeException(
+                    "Unable to load source for class " + className + " in folders " + getSourceRoots()
+                                       + " (classpath: " + classpath + ")");
+        }
+    }
+
+    private List<Path> getSourceRoots() {
+        if (sourceRoots == null) {
+            sourceRoots = project.getCompileSourceRoots().stream()
+                    .map(Paths::get)
+                    .collect(Collectors.toList());
+        }
+        return sourceRoots;
+    }
+
+    private String findJavaDoc(String source, JavaAnnotationSource annotationSource, Method method) {
+        AnnotationElementSource element = annotationSource.getAnnotationElement(method.getName());
+        if (element == null) {
+            return null;
+        }
+        return getJavaDocText(source, element);
+    }
+
+    static String getJavaDocText(String source, AnnotationElementSource member) {
+        if (member == null) {
+            return null;
+        }
+        AnnotationTypeMemberDeclaration decl = (AnnotationTypeMemberDeclaration) member.getInternal();
+        Javadoc jd = decl.getJavadoc();
+        if (source != null && !jd.tags().isEmpty()) {
+            ASTNode n = (ASTNode) jd.tags().get(0);
+            String txt = source.substring(n.getStartPosition(), n.getStartPosition() + n.getLength());
+            return txt
+                    .replaceAll(" *\n *\\* *\n", "\n\n")
+                    .replaceAll(" *\n *\\* +", "\n");
+        }
+        return null;
     }
 
     private static String evaluateTemplate(final String templateName, final Object model) throws MojoExecutionException {
