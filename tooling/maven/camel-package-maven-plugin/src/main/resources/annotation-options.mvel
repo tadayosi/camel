@@ -4,7 +4,7 @@
 | Parameter name | Type | Optional | Default value | Info
 
 @foreach{row : sortedOptions}
-| @{row.name} | @{row.type} | @if{row.optional}Yes@end{} | @if{row.defaultValue != null}${row.defaultValue}@end{} @{row.description.?contains("\n") ? "a" : ""}| @{util.escape(row.description)}
+| @{row.name} | @{row.type} | @if{row.optional}icon:check[]@end{} | @if{row.defaultValue != null}${row.defaultValue}@end{} @{row.description.?contains("\n") ? "a" : ""}| @{util.escape(row.description)}
 @end{}
 |===
 @end{}

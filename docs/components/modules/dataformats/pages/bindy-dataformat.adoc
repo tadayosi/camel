@@ -117,33 +117,33 @@ to several children model classes.
 
 | separator | String |  |  | Separator used to split a record in tokens (mandatory)
 
-| allowEmptyStream | boolean | Yes | false | The allowEmptyStream parameter will allow to prcoess the unavaiable stream for CSV file.
+| allowEmptyStream | boolean | icon:check[] | false | The allowEmptyStream parameter will allow to prcoess the unavaiable stream for CSV file.
 
-| autospanLine | boolean | Yes | false | Last record spans rest of line (optional)
+| autospanLine | boolean | icon:check[] | false | Last record spans rest of line (optional)
 
-| crlf | String | Yes | WINDOWS a| Character to be used to add a carriage return after each record (optional) Three values can be used : WINDOWS,
+| crlf | String | icon:check[] | WINDOWS a| Character to be used to add a carriage return after each record (optional) Three values can be used : WINDOWS,
 UNIX or MAC.
 
-| endWithLineBreak | boolean | Yes | true | The endWithLineBreak parameter flags if the CSV file should end with a line break or not (optional)
+| endWithLineBreak | boolean | icon:check[] | true | The endWithLineBreak parameter flags if the CSV file should end with a line break or not (optional)
 
-| generateHeaderColumns | boolean | Yes | false | The generateHeaderColumns parameter allow to add in the CSV generated the header containing names of the columns
+| generateHeaderColumns | boolean | icon:check[] | false | The generateHeaderColumns parameter allow to add in the CSV generated the header containing names of the columns
 
-| isOrdered | boolean | Yes | false | Indicates if the message must be ordered in output
+| isOrdered | boolean | icon:check[] | false | Indicates if the message must be ordered in output
 
-| name | String | Yes |  | Name describing the record (optional)
+| name | String | icon:check[] |  | Name describing the record (optional)
 
-| quote | String | Yes | " | Whether to marshal columns with the given quote character (optional)
+| quote | String | icon:check[] | " | Whether to marshal columns with the given quote character (optional)
 
-| quoting | boolean | Yes | false | Indicate if the values (and headers) must be quoted when marshaling (optional)
+| quoting | boolean | icon:check[] | false | Indicate if the values (and headers) must be quoted when marshaling (optional)
 
-| quotingEscaped | boolean | Yes | false | Indicate if the values must be escaped when quoting (optional)
+| quotingEscaped | boolean | icon:check[] | false | Indicate if the values must be escaped when quoting (optional)
 
-| removeQuotes | boolean | Yes | true | The remove quotes parameter flags if unmarshalling should try to remove quotes for each field
+| removeQuotes | boolean | icon:check[] | true | The remove quotes parameter flags if unmarshalling should try to remove quotes for each field
 
-| skipField | boolean | Yes | false a| The skipField parameter will allow to skip fields of a CSV file. If some fields are not necessary, they can be
+| skipField | boolean | icon:check[] | false a| The skipField parameter will allow to skip fields of a CSV file. If some fields are not necessary, they can be
 skipped.
 
-| skipFirstLine | boolean | Yes | false a| The skipFirstLine parameter will allow to skip or not the first line of a CSV file. This line often contains
+| skipFirstLine | boolean | icon:check[] | false a| The skipFirstLine parameter will allow to skip or not the first line of a CSV file. This line often contains
 columns definition
 
 |===
@@ -407,7 +407,7 @@ The link annotation will allow to link objects together.
 | Parameter name | Type | Optional | Default value | Info
 
 
-| linkType | LinkType | Yes | OneToOne | Type of link identifying the relation between the classes
+| linkType | LinkType | icon:check[] | OneToOne | Type of link identifying the relation between the classes
 
 |===
 // annotation options: END
