@@ -1,0 +1,205 @@
+= TensorFlow Serving Component
+:doctitle: TensorFlow Serving
+:shortname: tensorflow-serving
+:artifactid: camel-tensorflow-serving
+:description: Provide access to TensorFlow Serving model servers to run inference with TensorFlow saved models remotely
+:since: 4.10
+:supportlevel: Preview
+:tabs-sync-option:
+:component-header: Only producer is supported
+//Manually maintained attributes
+:group: AI
+:camel-spring-boot-name: tensorflow-serving
+
+*Since Camel {since}*
+
+*{component-header}*
+
+The TensorFlow Serving component provides support for invoking the https://github.com/tensorflow/serving/blob/2.18.0/tensorflow_serving/apis/prediction_service.proto[TensorFlow Serving Client API (gRPC)]. It enables Camel to access https://www.tensorflow.org/tfx/guide/serving[TensorFlow Serving model servers] to run inference with TensorFlow saved models remotely.
+
+To use the TensorFlow Serving component, Maven users will need to add the following dependency to their `pom.xml`:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.apache.camel</groupId>
+    <artifactId>camel-tensorflow-serving</artifactId>
+    <version>x.x.x</version>
+    <!-- use the same version as your Camel core version -->
+</dependency>
+----
+
+== URI format
+
+----
+tensorflow-serving:api[?options]
+----
+
+Where `api` represents one of the https://github.com/tensorflow/serving/blob/2.18.0/tensorflow_serving/apis/prediction_service.proto[TensorFlow Serving Client API (gPRC)]. While its RESTful Client API is not directly supported by the component, you can refer to the https://www.tensorflow.org/tfx/serving/api_rest[doc] to get an idea of each API that TensorFlow Serving provides.
+
+// component-configure options: START
+
+// component-configure options: END
+
+// component options: START
+include::partial$component-configure-options.adoc[]
+include::partial$component-endpoint-options.adoc[]
+// component options: END
+
+// endpoint options: START
+
+// endpoint options: END
+
+// component headers: START
+include::partial$component-endpoint-headers.adoc[]
+// component headers: END
+
+== Usage
+
+The component supports the following APIs.
+
+----
+tensorflow-serving:<api>[?options]
+----
+
+[width="100%",cols="2,5,1,2,2",options="header"]
+|===
+| API | Description | Options | Input (Message Body) | Result
+
+| `model-status`
+| Register a new model in TensorFlow Serving.
+| `modelName` +
+  `modelVersion` +
+  `modelVersionLabel`
+| `String`
+| `String`
+
+| `model-metadata`
+| Configure number of workers for a model. This is an asynchronous call by default.
+Caller need to call `describe` to check if the model workers has been changed.
+| `modelName` +
+  `modelVersion` +
+  `modelVersionLabel`
+| `String`
+| `String`
+
+| `classify`
+| Provides detailed information about a model. If "all" is specified as version,
+returns the details about all the versions of the model.
+| `modelName` +
+  `modelVersion` +
+  `modelVersionLabel`
+| `String`
+| `List<ModelDetail>` footnote:[`org.apache.camel.component.tensorflow-serving.client.model.ModelDetail`]
+
+| `regress`
+| Unregister a model from TensorFlow Serving. This is an asynchronous call by default.
+Caller can call `list` to confirm the model is unregistered.
+| `modelName` +
+  `modelVersion` +
+  `modelVersionLabel`
+| `String`
+| `String`
+
+| `predict`
+| Set default version of a model.
+| `modelName` +
+  `modelVersion` +
+  `modelVersionLabel`
+| `String`
+| `String`
+|===
+
+== Examples
+
+=== Model status API
+
+.Health checking
+[source,java]
+----
+from("direct:ping")
+    .to("tensorflow-serving:inference/ping")
+    .log("Status: ${body}");
+----
+
+.Prediction
+[source,java]
+----
+from("file:data/kitten.jpg")
+    .to("tensorflow-serving:inference/predictions?modelName=squeezenet1_1")
+    .log("Result: ${body}");;
+----
+
+=== Model Metadata API
+
+=== Classify API
+
+.Register a model
+[source,java]
+----
+from("direct:register")
+    .to("tensorflow-serving:management/register?url=https://tensorflow-serving.pytorch.org/mar_files/mnist_v2.mar")
+    .log("Status: ${body}");
+----
+
+.Scale workers for a registered model
+[source,java]
+----
+from("direct:scale-worker")
+    .setHeader(TorchServeConstants.SCALE_WORKER_OPTIONS,
+        constant(ScaleWorkerOptions.builder().minWorker(1).maxWorker(2).build()))
+    .to("tensorflow-serving:management/scale-worker?modelName=mnist_v2")
+    .log("Status: ${body}");
+----
+
+.Get the detailed information about a model
+[source,java]
+----
+from("direct:describe")
+    .to("tensorflow-serving:management/describe?modelName=mnist_v2")
+    .log("${body[0]}");
+----
+
+.Unregister a model
+[source,java]
+----
+from("direct:register")
+    .to("tensorflow-serving:management/unregister?modelName=mnist_v2")
+    .log("Status: ${body}");
+----
+
+.List models
+[source,java]
+----
+from("direct:list")
+    .to("tensorflow-serving:management/list")
+    .log("${body.models}");
+----
+
+.Set the default version of a model
+[source,java]
+----
+from("direct:set-default")
+    .to("tensorflow-serving:management/set-default?modelName=mnist_v2&modelVersion=2.0")
+    .log("Status: ${body}");
+----
+
+=== Regress API
+
+=== Predict API
+
+.All metrics
+[source,java]
+----
+from("direct:metrics")
+    .to("tensorflow-serving:metrics/metrics");
+----
+
+.`MemoryUsed` metrics only
+[source,java]
+----
+from("direct:metrics")
+    .to("tensorflow-serving:metrics/metrics?metricsName=MemoryUsed");
+----
+
+include::spring-boot:partial$starter.adoc[]
